@@ -5,6 +5,7 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use(express.json());
 
 const pool = new Pool({
     user: 'postgres',
@@ -40,12 +41,26 @@ app.listen(port, () => {
 app.get('/usuarios', async (req, res) => {
     try {
         const client = await pool.connect();
-        const result = await client.query('SELECT * FROM usuario');
         const usuarios = result.rows;
-        res.json(usuarios); // Retorna os dados da tabela usuario como JSON
+        res.json(usuarios);
         client.release();
     } catch (error) {
         console.error('Erro ao consultar a tabela usuario', error);
         res.status(500).send('Erro ao consultar a tabela usuario');
+    }
+});
+
+app.post('/usuarios', async (req, res) => {
+    const { nome, email, idade } = req.body;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query('INSERT INTO usuarios (nome, email, idade) VALUES ($1, $2, $3) RETURNING *', [nome, email, idade]);
+        const novoUsuario = result.rows[0];
+        res.status(201).json(novoUsuario);
+        client.release();
+    } catch (error) {
+        console.error('Erro ao criar novo usuário', error);
+        res.status(500).send('Erro ao criar novo usuário');
     }
 });
