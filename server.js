@@ -1,20 +1,20 @@
 const express = require('express');
 const { Pool } = require('pg');
-require('dotenv').config(); // Carrega as variáveis de ambiente do arquivo .env
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configuração da conexão com o banco de dados PostgreSQL
+
 const pool = new Pool({
-    user: 'postgres', // Usuário do banco de dados
-    host: 'localhost', // Host do banco de dados
-    database: 'postgres', // Nome do banco de dados
-    password: '123456', // Senha do banco de dados
-    port: 5432, // Porta padrão do PostgreSQL
+    user: 'postgres',
+    host: 'localhost',
+    database: 'postgres',
+    password: '123456',
+    port: 5432,
 });
 
-// Rota para testar a conexão com o banco de dados
+
 app.get('/test-db', async (req, res) => {
     try {
         const client = await pool.connect();
@@ -28,12 +28,24 @@ app.get('/test-db', async (req, res) => {
     }
 });
 
-// Rota de exemplo
+
 app.get('/', (req, res) => {
     res.send('Servidor Node.js está funcionando!');
 });
 
-// Inicia o servidor
 app.listen(port, () => {
     console.log(`Servidor está sendo executado em http://localhost:${port}`);
+});
+
+app.get('/usuarios', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT * FROM usuario');
+        const usuarios = result.rows;
+        res.json(usuarios); // Retorna os dados da tabela usuario como JSON
+        client.release();
+    } catch (error) {
+        console.error('Erro ao consultar a tabela usuario', error);
+        res.status(500).send('Erro ao consultar a tabela usuario');
+    }
 });
