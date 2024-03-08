@@ -41,7 +41,8 @@ app.listen(port, () => {
 app.get('/usuarios', async (req, res) => {
     try {
         const client = await pool.connect();
-        const usuarios = result.rows;
+        const result = await client.query('SELECT * FROM usuarios');
+        const usuarios = result.rows; // Defina a variável 'result' corretamente
         res.json(usuarios);
         client.release();
     } catch (error) {
@@ -62,5 +63,26 @@ app.post('/usuarios', async (req, res) => {
     } catch (error) {
         console.error('Erro ao criar novo usuário', error);
         res.status(500).send('Erro ao criar novo usuário');
+    }
+});
+
+app.put('/usuarios/:id', async (req, res) => {
+    const id = req.params.id;
+    const { nome, email, idade } = req.body;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query('UPDATE usuarios SET nome = $1, email = $2, idade = $3 WHERE id = $4 RETURNING *', [nome, email, idade, id]);
+
+        if (result.rowCount === 0) {
+            res.status(404).send('Usuário não encontrado');
+        } else {
+            res.status(200).json(result.rows[0]);
+        }
+
+        client.release();
+    } catch (error) {
+        console.error('Erro ao atualizar usuário', error);
+        res.status(500).send('Erro ao atualizar usuário');
     }
 });
