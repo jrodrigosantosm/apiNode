@@ -51,6 +51,27 @@ app.get('/usuarios', async (req, res) => {
     }
 });
 
+app.get('/usuarios/:id', async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT * FROM usuarios WHERE id = $1', [id]);
+
+        if (result.rowCount === 0) {
+            res.status(404).send('Usuário não encontrado');
+        } else {
+            const usuario = result.rows[0];
+            res.status(200).json(usuario);
+        }
+
+        client.release();
+    } catch (error) {
+        console.error('Erro ao consultar usuário', error);
+        res.status(500).send('Erro ao consultar usuário');
+    }
+});
+
 app.post('/usuarios', async (req, res) => {
     const { nome, email, idade } = req.body;
 
@@ -84,5 +105,25 @@ app.put('/usuarios/:id', async (req, res) => {
     } catch (error) {
         console.error('Erro ao atualizar usuário', error);
         res.status(500).send('Erro ao atualizar usuário');
+    }
+});
+
+app.delete('/usuarios/:id', async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query('DELETE FROM usuarios WHERE id = $1 RETURNING *', [id]);
+
+        if (result.rowCount === 0) {
+            res.status(404).send('Usuário não encontrado');
+        } else {
+            res.status(200).send('Usuário deletado com sucesso');
+        }
+
+        client.release();
+    } catch (error) {
+        console.error('Erro ao deletar usuário', error);
+        res.status(500).send('Erro ao deletar usuário');
     }
 });
