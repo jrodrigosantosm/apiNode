@@ -42,7 +42,7 @@ app.get('/usuarios', async (req, res) => {
     try {
         const client = await pool.connect();
         const result = await client.query('SELECT * FROM usuarios');
-        const usuarios = result.rows; // Defina a variável 'result' corretamente
+        const usuarios = result.rows;
         res.json(usuarios);
         client.release();
     } catch (error) {
